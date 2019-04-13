@@ -60,7 +60,7 @@ func main() {
 	}
 
 	writer := csv.NewWriter(file)
-
+	writer.Comma = '\t'
 	writer.Write([]string{"Updated", "Star", "User", "URL"})
 
 	for _, activerepo := range activerepos {
@@ -74,7 +74,7 @@ func main() {
 			continue
 		}
 		s := []string{activerepo.UpdatedAt.String(), strconv.Itoa(*activerepo.StargazersCount), *activerepo.Owner.Login, *activerepo.HTMLURL}
-		writer.Comma = '\t'
+
 		writer.Write(s)
 	}
 	writer.Flush()
