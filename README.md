@@ -28,6 +28,4 @@ Its order is newest forked to older forked.
 
 ## Filter
 
-Both
-
 * Has Issue
