@@ -54,11 +54,7 @@ func main() {
 	}
 	activerepos := make([]*github.Repository, 0, 100)
 	for _, forkedrepo := range forkedrepos {
-		if *forkedrepo.HasIssues {
-			activerepos = append(activerepos, forkedrepo)
-			continue
-		}
-		if *forkedrepo.StargazersCount > 1 {
+		if *forkedrepo.HasIssues && *forkedrepo.StargazersCount > 1 {
 			activerepos = append(activerepos, forkedrepo)
 			continue
 		}

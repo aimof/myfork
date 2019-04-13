@@ -25,7 +25,7 @@ Its order  is newest forked to older forked.
 
 ## Filter
 
-OR
+Both
 
 * Stars:>1
 * has Issue
