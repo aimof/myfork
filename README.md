@@ -15,3 +15,8 @@ $ myfork antonholmquist/jason /dev/stdout
 2016-04-09 13:19:24 +0000 UTC,0,https://api.github.com/repos/grubern/jason
 ```
 
+### tsv format
+
+```tsv
+timestamp	stars	url
+```
