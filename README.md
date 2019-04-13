@@ -35,7 +35,7 @@ It seems to be etcd-io/bbolt is the repo you should see.
 ### tsv format
 
 ```tsv
-timestamp(updatedAt)	stars	size(kB)	url
+timestamp(updatedAt)	stars	user	url
 ```
 
 Its order is newest forked to older forked.
