@@ -54,7 +54,7 @@ func main() {
 	}
 	activerepos := make([]*github.Repository, 0, 100)
 	for _, forkedrepo := range forkedrepos {
-		if *forkedrepo.HasIssues && *forkedrepo.StargazersCount > 1 {
+		if *forkedrepo.HasIssues {
 			activerepos = append(activerepos, forkedrepo)
 			continue
 		}
@@ -63,7 +63,7 @@ func main() {
 	writer := csv.NewWriter(file)
 
 	for _, activerepo := range activerepos {
-		s := []string{activerepo.UpdatedAt.String(), strconv.Itoa(*activerepo.StargazersCount), *activerepo.URL}
+		s := []string{activerepo.UpdatedAt.String(), strconv.Itoa(*activerepo.StargazersCount), strconv.Itoa(*activerepo.Size), *activerepo.HTMLURL}
 		writer.Comma = '\t'
 		writer.Write(s)
 	}
@@ -77,7 +77,7 @@ func args() (owner, repo, filename string) {
 	}
 	s := strings.Split(os.Args[1], "/")
 	if len(s) != 2 {
-		log.Println("repository format is wrong: args1 = owner/repo")
+		log.Println("repository format is wrong: param0 = owner/repo")
 		os.Exit(1)
 	}
 	owner = s[0]

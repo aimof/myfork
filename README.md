@@ -1,5 +1,8 @@
 # Where is my fork?
 
+Search forked repositories which has Issues.
+It is mvp so it may be changed distructively.
+
 ## Usage
 
 ```sh
@@ -18,14 +21,13 @@ $ myfork antonholmquist/jason /dev/stdout
 ### tsv format
 
 ```tsv
-timestamp(updatedAt)	stars	url
+timestamp(updatedAt)	stars	size(kB)	url
 ```
 
-Its order  is newest forked to older forked.
+Its order is newest forked to older forked.
 
 ## Filter
 
 Both
 
-* Stars:>1
-* has Issue
+* Has Issue
