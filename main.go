@@ -56,14 +56,24 @@ func main() {
 	for _, forkedrepo := range forkedrepos {
 		if *forkedrepo.HasIssues {
 			activerepos = append(activerepos, forkedrepo)
-			continue
 		}
 	}
 
 	writer := csv.NewWriter(file)
 
+	writer.Write([]string{"Updated", "Star", "User", "URL"})
+
 	for _, activerepo := range activerepos {
-		s := []string{activerepo.UpdatedAt.String(), strconv.Itoa(*activerepo.StargazersCount), strconv.Itoa(*activerepo.Size), *activerepo.HTMLURL}
+		if activerepo.UpdatedAt == nil {
+			continue
+		}
+		if activerepo.Owner == nil {
+			continue
+		}
+		if activerepo.Owner.Login == nil {
+			continue
+		}
+		s := []string{activerepo.UpdatedAt.String(), strconv.Itoa(*activerepo.StargazersCount), *activerepo.Owner.Login, *activerepo.HTMLURL}
 		writer.Comma = '\t'
 		writer.Write(s)
 	}
