@@ -42,6 +42,11 @@ func main() {
 	for _, forkedrepo := range forkedrepos {
 		if *forkedrepo.HasIssues {
 			activerepos = append(activerepos, forkedrepo)
+			continue
+		}
+		if *forkedrepo.StargazersCount != 0 {
+			activerepos = append(activerepos, forkedrepo)
+			continue
 		}
 	}
 
