@@ -29,22 +29,36 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	forkedrepos, _, err := client.Repositories.ListForks(ctx, owner, targetrepo, nil)
-	if _, ok := err.(*github.RateLimitError); ok {
-		log.Println("hit rate limit")
-		os.Exit(1)
-	} else if err != nil {
-		log.Println(err)
-		os.Exit(1)
+	opt := &github.RepositoryListForksOptions{
+		Sort:        "newest",
+		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
-	activerepos := make([]*github.Repository, 0, len(forkedrepos)/4)
+	forkedrepos := make([]*github.Repository, 0, 1000)
+	for {
+		repos, resp, err := client.Repositories.ListForks(ctx, owner, targetrepo, opt)
+		if _, ok := err.(*github.RateLimitError); ok {
+			log.Println("hit rate limit")
+			os.Exit(1)
+		} else if err != nil {
+			log.Println(err)
+			os.Exit(1)
+		}
+		forkedrepos = append(forkedrepos, repos...)
+		resp.Body.Close()
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+		log.Printf("Finish %d\n", (opt.Page-1)*100)
+	}
+	activerepos := make([]*github.Repository, 0, 100)
 	for _, forkedrepo := range forkedrepos {
 		if *forkedrepo.HasIssues {
 			activerepos = append(activerepos, forkedrepo)
 			continue
 		}
-		if *forkedrepo.StargazersCount != 0 {
+		if *forkedrepo.StargazersCount > 1 {
 			activerepos = append(activerepos, forkedrepo)
 			continue
 		}
