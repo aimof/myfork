@@ -18,5 +18,14 @@ $ myfork antonholmquist/jason /dev/stdout
 ### tsv format
 
 ```tsv
-timestamp	stars	url
+timestamp(updatedAt)	stars	url
 ```
+
+Its order  is newest forked to older forked.
+
+## Filter
+
+OR
+
+* Stars:>1
+* has Issue
