@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -29,9 +30,19 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
+	r, _, err := client.Repositories.Get(ctx, owner, targetrepo)
+	if _, ok := err.(*github.RateLimitError); ok {
+		log.Println("hit rate limit")
+		os.Exit(1)
+	} else if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	since := r.PushedAt.Time.Add(time.Nanosecond)
+
 	opt := &github.RepositoryListForksOptions{
 		Sort:        "newest",
-		ListOptions: github.ListOptions{PerPage: 100},
+		ListOptions: github.ListOptions{Page: 1, PerPage: 100},
 	}
 
 	forkedrepos := make([]*github.Repository, 0, 1000)
@@ -46,11 +57,11 @@ func main() {
 		}
 		forkedrepos = append(forkedrepos, repos...)
 		resp.Body.Close()
+		log.Printf("Finish searching forked repos: %d\n", (opt.Page-1)*100)
 		if resp.NextPage == 0 {
 			break
 		}
 		opt.Page = resp.NextPage
-		log.Printf("Finish %d\n", (opt.Page-1)*100)
 	}
 	activerepos := make([]*github.Repository, 0, 100)
 	for _, forkedrepo := range forkedrepos {
@@ -61,7 +72,7 @@ func main() {
 
 	writer := csv.NewWriter(file)
 	writer.Comma = '\t'
-	writer.Write([]string{"Updated", "Star", "User", "URL"})
+	writer.Write([]string{"ForkedAt", "UpdatedAt", "commits", "Star", "User", "URL"})
 
 	for _, activerepo := range activerepos {
 		if activerepo.UpdatedAt == nil {
@@ -73,7 +84,49 @@ func main() {
 		if activerepo.Owner.Login == nil {
 			continue
 		}
-		s := []string{activerepo.UpdatedAt.String(), strconv.Itoa(*activerepo.StargazersCount), *activerepo.Owner.Login, *activerepo.HTMLURL}
+		_, _, err = client.Repositories.Get(ctx, *activerepo.Owner.Login, *activerepo.Name)
+		if _, ok := err.(*github.RateLimitError); ok {
+			log.Println("Error(): GItHub API hit rate limit")
+			os.Exit(1)
+		} else if err != nil {
+			continue
+		}
+
+		opt := &github.CommitsListOptions{
+			Since: since,
+			ListOptions: github.ListOptions{
+				Page:    1,
+				PerPage: 100,
+			},
+		}
+
+		log.Printf("Searcing commits: %s", *activerepo.HTMLURL)
+		commits := make([]*github.RepositoryCommit, 0, 100)
+		for {
+			c, resp, err := client.Repositories.ListCommits(ctx, *activerepo.Owner.Login, *activerepo.Name, opt)
+			if _, ok := err.(*github.RateLimitError); ok {
+				log.Println("Error(): GItHub API hit rate limit")
+				os.Exit(1)
+			} else if err != nil {
+				log.Println(err)
+				os.Exit(1)
+			}
+			if resp.StatusCode != 200 {
+				resp.Body.Close()
+				break
+			}
+			commits = append(commits, c...)
+			log.Printf("Finish counting commits: %d\n", (opt.Page-1)*100)
+
+			if resp.NextPage == 0 {
+				resp.Body.Close()
+				break
+			}
+			opt.Page = resp.NextPage
+			resp.Body.Close()
+		}
+
+		s := []string{activerepo.CreatedAt.Format(time.RFC3339), activerepo.UpdatedAt.Format(time.RFC3339), strconv.Itoa(len(commits)), strconv.Itoa(*activerepo.StargazersCount), *activerepo.Owner.Login, *activerepo.HTMLURL}
 
 		writer.Write(s)
 	}
